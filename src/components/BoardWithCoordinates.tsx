@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import { Stage, Layer, Circle, Image, Text, Rect } from "react-konva";
+import { Stage, Layer, Image, Text, Rect } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
 
@@ -32,9 +31,17 @@ export const BoardWithCoordinates = ({
 }: BoardWithCoordinatesProps) => {
   const squareSize = boardSize / maxCoordinate;
 
+  // TODO:
+  // center mower in square
+  // => create function getting board coordinates and return css coordinates (x, y)
+  // make a button to use default instructions (test file)
+  // add input to upload txt file with instructions
+  // find a way to make the board responsive 
+  // => https://konvajs.org/docs/sandbox/Responsive_Canvas.html
+
   return (
     <>
-      <Stage width={window.innerWidth} height={window.innerHeight}>
+      <Stage width={1280} height={1280}>
         <Layer>
           {[...Array(maxCoordinate)].map((_, i) =>
             [...Array(maxCoordinate)].map((_, j) => (
