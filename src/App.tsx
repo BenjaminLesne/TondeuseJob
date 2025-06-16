@@ -7,7 +7,7 @@ function App() {
       <Header />
       <main className="px-3 py-8">
         <h1 className="text-4xl text-center">Vos tondeuses à gazon</h1>
-        <BoardWithCoordinates />
+        <BoardWithCoordinates maxCoordinate={5} />
       </main>
     </div>
   );

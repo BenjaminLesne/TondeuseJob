@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
-import { Stage, Layer, Circle, Image } from "react-konva";
+import { Stage, Layer, Circle, Image, Text, Rect } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
 
-const MOWER_WIDTH = 150;
-
-const Mower = () => {
+type MowerProps = {
+  width: number;
+};
+const Mower = ({ width }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
 
   return (
@@ -15,48 +16,62 @@ const Mower = () => {
       image={mowerImage}
       scaleX={0.5}
       scaleY={0.5}
-      width={MOWER_WIDTH}
-      height={MOWER_WIDTH * 1.5}
+      width={width}
+      height={width * 1.5}
     />
   );
 };
 
-export const BoardWithCoordinates = () => {
-  const circleRef = useRef(null);
+const boardSize = 400;
 
-  useEffect(() => {
-    const amplitude = 100;
-    const period = 2000; // in milliseconds
-
-    const anim = new Konva.Animation((frame) => {
-      circleRef.current.x(
-        amplitude * Math.sin((frame.time * 2 * Math.PI) / period) +
-          window.innerWidth / 2
-      );
-    }, circleRef.current.getLayer());
-
-    anim.start();
-
-    return () => {
-      anim.stop();
-    };
-  }, []);
+type BoardWithCoordinatesProps = {
+  maxCoordinate: number;
+};
+export const BoardWithCoordinates = ({
+  maxCoordinate,
+}: BoardWithCoordinatesProps) => {
+  const squareSize = boardSize / maxCoordinate;
 
   return (
     <>
-      {/* <img src={mowerPictureUrl} alt="Mower" width={100} /> */}
       <Stage width={window.innerWidth} height={window.innerHeight}>
         <Layer>
-          <Circle
-            ref={circleRef}
-            x={50}
-            y={window.innerHeight / 2}
-            radius={30}
-            fill="red"
-            stroke="black"
-            strokeWidth={4}
-          />
-          <Mower />
+          {[...Array(maxCoordinate)].map((_, i) =>
+            [...Array(maxCoordinate)].map((_, j) => (
+              <Rect
+                key={`${i}-${j}`}
+                x={j * squareSize}
+                y={i * squareSize}
+                width={squareSize}
+                height={squareSize}
+                fill={(i + j) % 2 === 0 ? "white" : "black"}
+              />
+            ))
+          )}
+
+          {[...Array(maxCoordinate)].map((_, i) => (
+            <Text
+              key={`y-${i}`}
+              text={`${maxCoordinate - (i + 1)}`}
+              x={boardSize + 10}
+              y={i * squareSize + squareSize / 2 - 10}
+              fontSize={20}
+            />
+          ))}
+
+          {[...Array(maxCoordinate)].map((_, j) => (
+            <Text
+              key={`x-${j}`}
+              text={`${j}`}
+              x={j * squareSize + squareSize / 2 - 10}
+              y={boardSize + 10}
+              fontSize={20}
+            />
+          ))}
+        </Layer>
+
+        <Layer>
+          <Mower width={squareSize * 1.25} />
         </Layer>
       </Stage>
     </>
