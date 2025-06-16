@@ -32,7 +32,6 @@ type GetBoardCoordinateFromInstructionArgs = {
 export function getBoardCoordinateFromInstruction({
   instruction,
 }: GetBoardCoordinateFromInstructionArgs) {
-  console.log(instruction)
 
   const coordinate = {
     x: numberToBoardCoordinate(0),
