@@ -18,9 +18,10 @@ export function getCssCoordinatesFromBoardCoordinates({
   x,
   y,
 }: GetBoardCssCoordinatesFromBoardCoordinatesArgs) {
+
   const coordinates = {
-    x: numberToCssCoordinate(0),
-    y: numberToCssCoordinate(0),
+    x: numberToCssCoordinate(x * squareSize),
+    y: numberToCssCoordinate(y * squareSize),
   };
 
   return coordinates;
