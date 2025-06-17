@@ -42,8 +42,8 @@ const MowerUI = ({ boardSize, squareSize, x, y, direction }: MowerProps) => {
     boardSize,
     squareSize,
   });
-  const xCoordinate = numberToCssCoordinate(coordinates.x + width / 2);
-  const yCoordinate = numberToCssCoordinate(coordinates.y + height / 2);
+  const xCoordinate = numberToCssCoordinate(coordinates.x + squareSize / 2);
+  const yCoordinate = numberToCssCoordinate(coordinates.y + squareSize / 2);
 
   return (
     <ImageWithTypeSafety
@@ -77,7 +77,7 @@ export const BoardWithCoordinates = ({
     scale: 1,
   });
   const containerRef = useRef<HTMLDivElement>(null);
-  const testRef = useRef<Layer>(null)
+  const boardRef = useRef<Layer>(null)
 
   const boardSize = Math.max(stageSize.width, stageSize.height);
   const potentialSquareSize = boardSize / maxCoordinates.x;
@@ -123,14 +123,14 @@ export const BoardWithCoordinates = ({
     };
   }, []);
   useEffect(() => {
-    if(!testRef.current) return;
-    const boardSizeValues = testRef.current.getClientRect()
+    if(!boardRef.current) return;
+    const boardSizeValues = boardRef.current.getClientRect()
     setStageSize(prev => ({
       ...prev,
       width: boardSizeValues.width,
       height: boardSizeValues.height,
     }))
-    console.log(testRef.current.getClientRect());
+    console.log(boardRef.current.getClientRect());
   }, []);
 
   // TODO:
@@ -149,11 +149,9 @@ export const BoardWithCoordinates = ({
       <Stage
         width={stageSize.width + 50}
         height={stageSize.height + 50}
-        // scaleX={stageSize.scale}
-        // scaleY={stageSize.scale}
         className="p-4"
       >
-        <Layer ref={testRef} name="board" >
+        <Layer ref={boardRef} >
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
               <Rect
