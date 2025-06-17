@@ -1,18 +1,22 @@
 export type CssCoordinate = number & { __brand: "CssCoordinate" };
 export type BoardCoordinate = number & { __brand: "BoardCoordinate" };
 export type Instruction = "R" | "L" | "F";
+export type Direction = "N" | "E" | "S" | "W";
 
 export type Data = {
-  maxCoordinates: { x: BoardCoordinate; y: BoardCoordinate };
+  maxCoordinates: {
+    x: BoardCoordinate;
+    y: BoardCoordinate;
+  };
   mowers: [
     {
-      start: { x: BoardCoordinate; y: BoardCoordinate };
+      start: { x: BoardCoordinate; y: BoardCoordinate; direction: Direction };
       instructions: Instruction[];
     }
   ];
 };
 
 export type Mower = {
-  start: { x: BoardCoordinate; y: BoardCoordinate };
+  start: { x: BoardCoordinate; y: BoardCoordinate; direction: Direction };
   instructions: Instruction[];
-}
+};

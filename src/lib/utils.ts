@@ -41,7 +41,7 @@ export function getBoardCoordinateFromInstruction({
   return coordinate;
 }
 
-function numberToCssCoordinate(number: number) {
+export function numberToCssCoordinate(number: number) {
   return number as CssCoordinate;
 }
 

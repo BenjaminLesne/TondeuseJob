@@ -3,8 +3,22 @@ import { Header } from "./components/Header";
 import "./App.css";
 import { Button } from "./components/ui/button";
 import defaultInstructionsUrl from "./assets/data.txt";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Data } from "./lib/types";
+
+const mockData: Data = {
+  maxCoordinates: { x: 5, y: 5 },
+  mowers: [
+    {
+      start: { x: 10, y: 2, direction: "N" },
+      instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
+    },
+    {
+      start: { x: 10, y: 75, direction: "S" },
+      instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
+    },
+  ],
+}
 
 const loadDefaultInstructions = async () => {
   try {
@@ -18,36 +32,7 @@ const loadDefaultInstructions = async () => {
 };
 
 function App() {
-  const [data, setData] = useState<Data>({
-    maxCoordinates: { x: 5, y: 5 },
-    mowers: [
-      {
-        start: { x: 1, y: 2 },
-        instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-      },
-      {
-        start: { x: 1, y: 2 },
-        instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-      },
-    ],
-  });
-
-  // temp: setState on first render for now until we implement file upload
-  useEffect(() => {
-    setData({
-      maxCoordinates: { x: 5, y: 5 },
-      mowers: [
-        {
-          start: { x: 1, y: 2 },
-          instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-        },
-        {
-          start: { x: 1, y: 2 },
-          instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-        },
-      ],
-    });
-  }, []);
+  const [data, setData] = useState<Data>(mockData);
 
 
   return (
