@@ -7,7 +7,7 @@ import { useState } from "react";
 import type { Data } from "./lib/types";
 
 const mockData: Data = {
-  maxCoordinates: { x: 5, y: 5 },
+  maxCoordinates: { x: 5, y: 10 },
   mowers: [
     {
       start: { x: 10, y: 2, direction: "N" },
