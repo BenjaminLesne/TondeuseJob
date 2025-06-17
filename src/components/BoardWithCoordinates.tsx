@@ -1,4 +1,12 @@
-import { Stage, Layer, Image, Text, Rect, Group, type KonvaNodeComponent } from "react-konva";
+import {
+  Stage,
+  Layer,
+  Image,
+  Text,
+  Rect,
+  Group,
+  type KonvaNodeComponent,
+} from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
 import type {
@@ -70,14 +78,12 @@ export const BoardWithCoordinates = ({
   maxCoordinates,
   mowers = [],
 }: BoardWithCoordinatesProps) => {
-  // State to track current scale and dimensions
   const [stageSize, setStageSize] = useState({
     width: 1000,
     height: 1000,
-    scale: 1,
   });
   const containerRef = useRef<HTMLDivElement>(null);
-  const boardRef = useRef<Layer>(null)
+  const boardRef = useRef<Layer>(null);
 
   const boardSize = Math.max(stageSize.width, stageSize.height);
   const potentialSquareSize = boardSize / maxCoordinates.x;
@@ -88,58 +94,18 @@ export const BoardWithCoordinates = ({
   const xMax = maxCoordinates.x;
   const yMax = maxCoordinates.y;
 
-  // Define virtual size for our scene
-  const sceneWidth = 1000;
-  const sceneHeight = 1000;
-
-  // Reference to parent container
-
-
-  // Function to handle resize
-  const updateSize = () => {
-    if (!containerRef.current) return;
-
-    // Get container width
-    const containerWidth = containerRef.current.offsetWidth;
-
-    // Calculate scale
-    const scale = containerWidth / sceneWidth;
-
-    // Update state with new dimensions
-    setStageSize({
-      width: sceneWidth * scale,
-      height: sceneHeight * scale,
-      scale: scale,
-    });
-  };
-
-  // Update on mount and when window resizes
   useEffect(() => {
-    updateSize();
-    window.addEventListener("resize", updateSize);
-
-    return () => {
-      window.removeEventListener("resize", updateSize);
-    };
-  }, []);
-  useEffect(() => {
-    if(!boardRef.current) return;
-    const boardSizeValues = boardRef.current.getClientRect()
-    setStageSize(prev => ({
+    if (!boardRef.current) return;
+    const boardSizeValues = boardRef.current.getClientRect();
+    setStageSize((prev) => ({
       ...prev,
       width: boardSizeValues.width,
       height: boardSizeValues.height,
-    }))
-    console.log(boardRef.current.getClientRect());
+    }));
   }, []);
 
   // TODO:
-  // center mower in square
-  // => create function getting board coordinates and return css coordinates (x, y)
-  // make a button to use default instructions (test file)
-  // add input to upload txt file with instructions
-  // find a way to make the board responsive
-  // => https://konvajs.org/docs/sandbox/Responsive_Canvas.html
+  // position mowers to right board coordinates on start
 
   return (
     <div
@@ -151,7 +117,7 @@ export const BoardWithCoordinates = ({
         height={stageSize.height + 50}
         className="p-4"
       >
-        <Layer ref={boardRef} >
+        <Layer ref={boardRef}>
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
               <Rect

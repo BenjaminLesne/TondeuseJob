@@ -5,6 +5,15 @@ import { Button } from "./components/ui/button";
 import defaultInstructionsUrl from "./assets/data.txt";
 import { useState } from "react";
 import type { Data } from "./lib/types";
+import { Toaster } from "./components/ui/sonner";
+import { toast } from "sonner";
+import { z } from "zod";
+import {
+  CoordinateSchema,
+  DirectionSchema,
+  InstructionSchema,
+} from "./lib/schemas";
+import { numberToBoardCoordinate } from "./lib/utils";
 
 const mockData: Data = {
   maxCoordinates: { x: 5, y: 10 },
@@ -18,36 +27,74 @@ const mockData: Data = {
       instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
     },
   ],
-}
+};
 
-const loadDefaultInstructions = async () => {
+const loadDefaultInstructions = async (
+  setState: React.Dispatch<React.SetStateAction<Data>>
+) => {
   try {
     const res = await fetch(defaultInstructionsUrl);
     if (!res.ok) throw new Error("Failed to load file");
     const text = await res.text(); // optionally use the content
-    // console.log(text);
+    const textAsArrayOfLines = text.split("\n");
+    const lineOne = textAsArrayOfLines[0];
+    const lineTwo = textAsArrayOfLines[1];
+    const lineThree = textAsArrayOfLines[2];
+    const lineFour = textAsArrayOfLines[3];
+    const lineFive = textAsArrayOfLines[4];
+
+    const maxCoordinates = {
+      x: numberToBoardCoordinate(CoordinateSchema.parse(lineOne.charAt(0))),
+      y: numberToBoardCoordinate(CoordinateSchema.parse(lineOne.charAt(1))),
+    };
+    const mower1 = {
+      start: {
+        x: numberToBoardCoordinate(CoordinateSchema.parse(lineTwo.charAt(0))),
+        y: numberToBoardCoordinate(CoordinateSchema.parse(lineTwo.charAt(1))),
+        direction: DirectionSchema.parse(lineTwo.charAt(3)),
+      },
+      instructions: InstructionSchema.array().parse(lineThree.split("")),
+    };
+
+    const mower2 = {
+      start: {
+        x: numberToBoardCoordinate(CoordinateSchema.parse(lineFour.charAt(0))),
+        y: numberToBoardCoordinate(CoordinateSchema.parse(lineFour.charAt(1))),
+        direction: DirectionSchema.parse(lineFour.charAt(3)),
+      },
+      instructions: InstructionSchema.array().parse(lineFive.split("")),
+    };
+
+    const mowers = [mower1, mower2];
+
+    setState({
+      maxCoordinates,
+      mowers,
+    });
   } catch (err) {
     console.error(err);
+    toast.error("Une erreur est survenue", {});
   }
 };
 
 function App() {
   const [data, setData] = useState<Data>(mockData);
-
-
+  console.log("data", data);
   return (
     <div className="max-w-7xl mx-auto">
       <Header />
       <main className="px-3 py-8">
         <h1 className="text-4xl text-center">Vos tondeuses à gazon</h1>
-        <Button onClick={loadDefaultInstructions}>
+        <Button onClick={() => loadDefaultInstructions(setData)}>
           Lancer les instructions par défaut
         </Button>
         <BoardWithCoordinates
+          key={JSON.stringify(data)}
           maxCoordinates={data.maxCoordinates}
           mowers={data.mowers}
         />
       </main>
+      <Toaster richColors position="bottom-center" />
     </div>
   );
 }
