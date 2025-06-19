@@ -1,7 +1,7 @@
 import { Stage, Layer, Text, Rect } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
-import type { Mower } from "@/lib/types";
+import type { BoardCoordinate, Mower } from "@/lib/types";
 import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
 import {
   getCssCoordinatesFromBoardCoordinates,
@@ -12,15 +12,16 @@ import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
 
 const DIRECTION_TO_ROTATION = {
-  N: 0,
+  N: 180,
   E: 270,
-  S: 180,
+  S: 0,
   W: 90,
 };
 
 type MowerProps = {
   mower: Mower;
   squareSize: number;
+  maxCoordinates: { x: BoardCoordinate; y: BoardCoordinate };
   onAnimationComplete: () => void;
   shouldAnimate: boolean;
 };
@@ -30,6 +31,7 @@ const MowerUI = ({
   squareSize,
   onAnimationComplete,
   shouldAnimate,
+  maxCoordinates
 }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
   const imageRef = useRef<Konva.Image>(null);
@@ -43,6 +45,7 @@ const MowerUI = ({
     x: start.x,
     y: start.y,
     squareSize,
+    maxY: maxCoordinates.y,
   });
 
   const startX = numberToCssCoordinate(startCoords.x + squareSize / 2);
@@ -55,15 +58,18 @@ const MowerUI = ({
       instructions,
       startDirection: start.direction,
       startCoordinates: { x: start.x, y: start.y },
+      maxCoordinates,
     });
 
     const animate = async () => {
+      console.log(steps)
       for (const step of steps) {
         await new Promise<void>((resolve) => {
           const targetCoords = getCssCoordinatesFromBoardCoordinates({
             x: step.x,
             y: step.y,
             squareSize,
+            maxY: maxCoordinates.y,
           });
 
           const tween = new Konva.Tween({
@@ -137,8 +143,8 @@ export const BoardWithCoordinates = ({
     SQUARE_SIZE_MAX,
     Math.max(SQUARE_SIZE_MIN, potentialSquareSize)
   );
-  const xMax = maxCoordinates.x;
-  const yMax = maxCoordinates.y;
+  const xMax = maxCoordinates.x + 1;
+  const yMax = maxCoordinates.y + 1;
 
   useEffect(() => {
     if (containerRef.current) {
@@ -154,11 +160,7 @@ export const BoardWithCoordinates = ({
       className="border-2 border-gray-300 rounded-lg overflow-auto w-full h-[80vh]"
       ref={containerRef}
     >
-      <Stage
-        width={stageSize.width}
-        height={stageSize.height}
-        className="p-4"
-      >
+      <Stage width={stageSize.width} height={stageSize.height} className="p-4">
         <Layer>
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
@@ -204,6 +206,7 @@ export const BoardWithCoordinates = ({
                   key={index}
                   mower={mower}
                   squareSize={squareSize}
+                  maxCoordinates={maxCoordinates}
                   onAnimationComplete={handleAnimationComplete}
                   shouldAnimate={currentMowerIndex === index}
                 />
