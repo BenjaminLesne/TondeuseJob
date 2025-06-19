@@ -1,7 +1,7 @@
-import { Stage, Layer, Text, Rect } from "react-konva";
+import { Stage, Layer, Text, Rect, Label, Tag } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
-import type { BoardCoordinate, Mower } from "@/lib/types";
+import type { BoardCoordinate, Direction, Mower } from "@/lib/types";
 import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
 import {
   getCssCoordinatesFromBoardCoordinates,
@@ -35,6 +35,8 @@ const MowerUI = ({
 }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
   const imageRef = useRef<Konva.Image>(null);
+  const [finalPosition, setFinalPosition] = useState<{ x: BoardCoordinate; y: BoardCoordinate; direction: Direction } | null>(null);
+  const labelRef = useRef<Konva.Label>(null);
 
   const { start, instructions } = mower;
 
@@ -80,8 +82,22 @@ const MowerUI = ({
             easing: Konva.Easings.Linear,
             onFinish: resolve,
           });
+          if (labelRef.current) {
+            const labelTween = new Konva.Tween({
+              node: labelRef.current,
+              duration: 0.5,
+              x: numberToCssCoordinate(targetCoords.x + squareSize / 2),
+              y: numberToCssCoordinate(targetCoords.y + squareSize / 2 - height / 2 - 30),
+              easing: Konva.Easings.Linear,
+            });
+            labelTween.play();
+          }
           tween.play();
         });
+      }
+      const finalStep = steps[steps.length - 1];
+      if (finalStep) {
+        setFinalPosition(finalStep);
       }
       onAnimationComplete();
     };
@@ -99,17 +115,46 @@ const MowerUI = ({
   if (!mowerImage) return null;
 
   return (
-    <ImageWithTypeSafety
-      ref={imageRef}
-      x={startX}
-      y={startY}
-      image={mowerImage}
-      width={width}
-      height={height}
-      offsetX={width / 2}
-      offsetY={height / 2}
-      rotation={DIRECTION_TO_ROTATION[start.direction]}
-    />
+    <>
+      <ImageWithTypeSafety
+        ref={imageRef}
+        x={startX}
+        y={startY}
+        image={mowerImage}
+        width={width}
+        height={height}
+        offsetX={width / 2}
+        offsetY={height / 2}
+        rotation={DIRECTION_TO_ROTATION[start.direction]}
+      />
+      {finalPosition && (
+    <Label
+      ref={labelRef}
+      x={finalPosition.x}
+      y={finalPosition.y}
+    >
+      <Tag
+        fill='white'
+        pointerDirection='down'
+        pointerWidth={10}
+        pointerHeight={10}
+        lineJoin='round'
+        shadowColor='black'
+        shadowBlur={10}
+        shadowOffset={{ x: 10, y: 10 }}
+        shadowOpacity={0.5}
+        cornerRadius={5}
+      />
+      <Text
+        text={`x: ${finalPosition.x}\ny: ${finalPosition.y}\nDirection:${finalPosition.direction}`}
+        fontFamily='Calibri'
+        fontSize={18}
+        padding={5}
+        fill='black'
+      />
+    </Label>
+      )}
+    </>
   );
 };
 
@@ -120,6 +165,9 @@ type BoardWithCoordinatesProps = {
   maxCoordinates: { x: BoardCoordinate; y: BoardCoordinate };
   mowers: Mower[];
 };
+
+const PADDING = 50;
+
 export const BoardWithCoordinates = ({
   maxCoordinates,
   mowers = [],
@@ -156,7 +204,7 @@ export const BoardWithCoordinates = ({
         const yAxisLabelPadding = 40;
         const xAxisLabelPadding = 30;
 
-        const availableWidthForGrid = containerWidth - yAxisLabelPadding;
+        const availableWidthForGrid = containerWidth - yAxisLabelPadding - PADDING * 2;
         if (availableWidthForGrid <= 0) return;
 
         let newSquareSize = availableWidthForGrid / xMax;
@@ -164,10 +212,10 @@ export const BoardWithCoordinates = ({
         newSquareSize = Math.min(SQUARE_SIZE_MAX, newSquareSize);
 
         setSquareSize(newSquareSize);
-        setStageSize({
-          width: xMax * newSquareSize + yAxisLabelPadding,
-          height: yMax * newSquareSize + xAxisLabelPadding,
-        });
+      setStageSize({
+       width: xMax * newSquareSize + yAxisLabelPadding + PADDING * 2,
+       height: yMax * newSquareSize + xAxisLabelPadding + PADDING * 2,
+      });
       }
     });
 
@@ -183,7 +231,7 @@ export const BoardWithCoordinates = ({
       ref={containerRef}
     >
       <Stage width={stageSize.width} height={stageSize.height} className="mx-auto">
-        <Layer>
+        <Layer x={PADDING} y={PADDING}>
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
               <Rect
@@ -198,7 +246,7 @@ export const BoardWithCoordinates = ({
           )}
         </Layer>
 
-        <Layer>
+        <Layer x={PADDING} y={PADDING}>
           {[...Array(yMax)].map((_, i) => (
             <Text
               key={`yAxis-${i}`}
@@ -220,7 +268,7 @@ export const BoardWithCoordinates = ({
           ))}
         </Layer>
 
-        <Layer ref={layerRef}>
+        <Layer ref={layerRef} x={PADDING} y={PADDING}>
           {mowers.map(
             (mower, index) =>
               currentMowerIndex >= index && (
