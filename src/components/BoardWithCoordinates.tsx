@@ -12,10 +12,10 @@ import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
 
 const DIRECTION_TO_ROTATION = {
-  N: 180,
-  E: 90,
-  S: 0,
-  W: 270,
+  N: 0,
+  E: 270,
+  S: 180,
+  W: 90,
 };
 
 type MowerProps = {
