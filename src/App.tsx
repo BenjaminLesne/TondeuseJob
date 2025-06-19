@@ -14,20 +14,6 @@ import {
 } from "./lib/schemas";
 import { numberToBoardCoordinate, splitInHalf } from "./lib/utils";
 
-// const mockData: Data = {
-//   maxCoordinates: { x: 5, y: 10 },
-//   mowers: [
-//     {
-//       start: { x: 10, y: 2, direction: "N" },
-//       instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-//     },
-//     {
-//       start: { x: 10, y: 75, direction: "S" },
-//       instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-//     },
-//   ],
-// };
-
 const loadDefaultInstructions = async (
   setState: React.Dispatch<React.SetStateAction<Data | null>>
 ) => {

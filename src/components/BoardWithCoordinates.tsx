@@ -128,6 +128,7 @@ export const BoardWithCoordinates = ({
     width: 0,
     height: 0,
   });
+  const [squareSize, setSquareSize] = useState(SQUARE_SIZE_MIN);
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<Konva.Layer>(null);
   const [currentMowerIndex, setCurrentMowerIndex] = useState(0);
@@ -136,31 +137,53 @@ export const BoardWithCoordinates = ({
     setCurrentMowerIndex((prev) => prev + 1);
   };
 
-  const boardSize = Math.max(stageSize.width, stageSize.height);
-  const potentialSquareSize = boardSize / maxCoordinates.x;
-  const squareSize = Math.min(
-    SQUARE_SIZE_MAX,
-    Math.max(SQUARE_SIZE_MIN, potentialSquareSize)
-  );
   const xMax = maxCoordinates.x + 1;
   const yMax = maxCoordinates.y + 1;
 
   useEffect(() => {
-    if (containerRef.current) {
-      setStageSize({
-        width: containerRef.current.offsetWidth,
-        height: containerRef.current.offsetHeight,
-      });
+    const element = containerRef.current;
+    if (!element) {
+      return;
     }
-  }, []);
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const containerWidth = entry.contentRect.width;
+
+        if (containerWidth === 0) return;
+
+        const yAxisLabelPadding = 40;
+        const xAxisLabelPadding = 30;
+
+        const availableWidthForGrid = containerWidth - yAxisLabelPadding;
+        if (availableWidthForGrid <= 0) return;
+
+        let newSquareSize = availableWidthForGrid / xMax;
+        newSquareSize = Math.max(SQUARE_SIZE_MIN, newSquareSize);
+        newSquareSize = Math.min(SQUARE_SIZE_MAX, newSquareSize);
+
+        setSquareSize(newSquareSize);
+        setStageSize({
+          // width: containerWidth,
+          width: xMax * newSquareSize + xAxisLabelPadding,
+          height: yMax * newSquareSize + xAxisLabelPadding,
+        });
+      }
+    });
+
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [xMax, yMax]);
 
   return (
     <div
-      className="border-2 border-gray-300 rounded-lg w-full"
-      style={{ height: stageSize.height }}
+      className="p-4 border-2 border-gray-300 rounded-lg flex justify-center overflow-x-scroll"
       ref={containerRef}
     >
-      <Stage width={stageSize.width} height={stageSize.height} className="p-4">
+      <Stage width={stageSize.width} height={stageSize.height}>
         <Layer>
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
@@ -206,7 +229,10 @@ export const BoardWithCoordinates = ({
                   key={index}
                   mower={mower}
                   squareSize={squareSize}
-                  maxCoordinates={maxCoordinates}
+                  maxCoordinates={{
+                    x: maxCoordinates.x,
+                    y: maxCoordinates.y,
+                  }}
                   onAnimationComplete={handleAnimationComplete}
                   shouldAnimate={currentMowerIndex === index}
                 />
