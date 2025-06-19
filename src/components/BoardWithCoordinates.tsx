@@ -6,7 +6,6 @@ import {
   Rect,
   Group,
   type KonvaNodeComponent,
-   
 } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
@@ -20,10 +19,11 @@ import type {
 import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
 import {
   getCssCoordinatesFromBoardCoordinates,
+  getMowerAnimationSteps,
   numberToCssCoordinate,
 } from "@/lib/utils";
 import { useEffect, useRef, useState, type Ref } from "react";
-import Konva from 'konva';
+import Konva from "konva";
 
 const DIRECTION_TO_ROTATION = {
   N: 180,
@@ -35,55 +35,81 @@ const DIRECTION_TO_ROTATION = {
 type MowerProps = {
   squareSize: number;
   boardSize: number;
-  x: BoardCoordinate;
-  y: BoardCoordinate;
+  startCoordinates: {
+    x: BoardCoordinate;
+    y: BoardCoordinate;
+  };
   direction: Direction;
   instructions: Instruction[];
 };
 const MowerUI = ({
   boardSize,
   squareSize,
-  x,
-  y,
+  startCoordinates,
   direction,
   instructions,
 }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
   const imageRef = useRef<typeof ImageWithTypeSafety>(null);
 
- 
-
   const width = squareSize * 0.6;
   const height = width * 1.5;
 
   const coordinates = getCssCoordinatesFromBoardCoordinates({
-    x,
-    y,
-    boardSize,
+    x: startCoordinates.x,
+    y: startCoordinates.y,
     squareSize,
   });
   const xCoordinate = numberToCssCoordinate(coordinates.x + squareSize / 2);
   const yCoordinate = numberToCssCoordinate(coordinates.y + squareSize / 2);
+  const steps = getMowerAnimationSteps({
+    instructions,
+    startDirection: direction,
+    startCoordinates,
+  });
+
+  // ================================================
+  // steps.forEach((item, index) => {
+  //   setTimeout(() => {
+  //     console.log(item);
+  //   }, index * 2000);
+  // });
+  // ================================================
+
 
   // TODO: animate each instruction step
   // there is a syntax with an await somewhere, it could be nice to await each instruction
-  
+
   // useEffect(() => {
-  //   const amplitude = 100;
-  //   const period = 2000; // in milliseconds
 
-  //   const anim = new Konva.Animation((frame) => {
-  //     imageRef.current.x(
-  //       amplitude * Math.sin((frame.time * 2 * Math.PI) / period) +
-  //       window.innerWidth / 2
-  //     );
-  //   }, imageRef.current.getLayer());
+  //   if(imageRef.current === null) return;
+    
+  //   const tween = new Konva.Tween({
+  //     node: imageRef.current,
+  //     duration: 1,
+  //     x: window.innerWidth - 100,
+  //     easing: Konva.Easings.Linear,
+  //   });
+  //   tween.play();
 
-  //   anim.start();
 
-  //   return () => {
-  //     anim.stop();
-  //   };
+  //   // const anim = new Konva.Animation(() => {
+  //   //   imageRef.current.x(
+  //   //     steps[0].x
+  //   //   );
+  //   //   imageRef.current.y(
+  //   //     steps[0].y
+  //   //   );
+  //   //   imageRef.current.rotation(
+  //   //     DIRECTION_TO_ROTATION[steps[0].direction]
+  //   //   );
+  //   // }, imageRef.current.getLayer());
+
+  //   // anim.start();
+
+  //   // return () => {
+  //   //   anim.stop();
+  //   // };
   // }, []);
 
   if (!mowerImage) return null;
@@ -202,8 +228,7 @@ export const BoardWithCoordinates = ({
                 key={index}
                 squareSize={squareSize}
                 boardSize={boardSize}
-                x={x}
-                y={y}
+                startCoordinates={{ x, y }}
                 direction={direction}
                 instructions={instructions}
               />
