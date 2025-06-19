@@ -6,7 +6,8 @@ import type {
   Direction,
   Instruction,
 } from "./types";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
+import { EvenLengthStringSchema } from "./schemas";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -22,19 +23,15 @@ export function getCssCoordinatesFromBoardCoordinates({
   squareSize,
   x,
   y,
-  maxY
+  maxY,
 }: GetBoardCssCoordinatesFromBoardCoordinatesArgs) {
-  console.log(x, y, squareSize);
   const coordinates = {
-    x: numberToCssCoordinate((x) * squareSize),
+    x: numberToCssCoordinate(x * squareSize),
     y: numberToCssCoordinate((maxY - y) * squareSize),
   };
 
   return coordinates;
 }
-
-// TODO:
-// 
 
 type MowerAnimationStep = {
   x: BoardCoordinate;
@@ -119,4 +116,10 @@ export function numberToCssCoordinate(number: number) {
 
 export function numberToBoardCoordinate(number: number) {
   return number as BoardCoordinate;
+}
+
+export function splitInHalf(string: string): [string, string] {
+  EvenLengthStringSchema.parse(string);
+  const mid = string.length / 2;
+  return [string.slice(0, mid), string.slice(mid)];
 }

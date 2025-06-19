@@ -31,7 +31,7 @@ const MowerUI = ({
   squareSize,
   onAnimationComplete,
   shouldAnimate,
-  maxCoordinates
+  maxCoordinates,
 }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
   const imageRef = useRef<Konva.Image>(null);
@@ -62,7 +62,6 @@ const MowerUI = ({
     });
 
     const animate = async () => {
-      console.log(steps)
       for (const step of steps) {
         await new Promise<void>((resolve) => {
           const targetCoords = getCssCoordinatesFromBoardCoordinates({
@@ -118,7 +117,7 @@ const SQUARE_SIZE_MAX = 100;
 const SQUARE_SIZE_MIN = 50;
 
 type BoardWithCoordinatesProps = {
-  maxCoordinates: { x: number; y: number };
+  maxCoordinates: { x: BoardCoordinate; y: BoardCoordinate };
   mowers: Mower[];
 };
 export const BoardWithCoordinates = ({
@@ -126,8 +125,8 @@ export const BoardWithCoordinates = ({
   mowers = [],
 }: BoardWithCoordinatesProps) => {
   const [stageSize, setStageSize] = useState({
-    width: 1000,
-    height: 1000,
+    width: 0,
+    height: 0,
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<Konva.Layer>(null);
@@ -157,7 +156,8 @@ export const BoardWithCoordinates = ({
 
   return (
     <div
-      className="border-2 border-gray-300 rounded-lg overflow-auto w-full h-[80vh]"
+      className="border-2 border-gray-300 rounded-lg w-full"
+      style={{ height: stageSize.height }}
       ref={containerRef}
     >
       <Stage width={stageSize.width} height={stageSize.height} className="p-4">

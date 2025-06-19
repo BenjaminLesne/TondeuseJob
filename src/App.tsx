@@ -7,30 +7,29 @@ import { useState } from "react";
 import type { Data } from "./lib/types";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
-import { z } from "zod";
 import {
   CoordinateSchema,
   DirectionSchema,
   InstructionSchema,
 } from "./lib/schemas";
-import { numberToBoardCoordinate } from "./lib/utils";
+import { numberToBoardCoordinate, splitInHalf } from "./lib/utils";
 
-const mockData: Data = {
-  maxCoordinates: { x: 5, y: 10 },
-  mowers: [
-    {
-      start: { x: 10, y: 2, direction: "N" },
-      instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-    },
-    {
-      start: { x: 10, y: 75, direction: "S" },
-      instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
-    },
-  ],
-};
+// const mockData: Data = {
+//   maxCoordinates: { x: 5, y: 10 },
+//   mowers: [
+//     {
+//       start: { x: 10, y: 2, direction: "N" },
+//       instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
+//     },
+//     {
+//       start: { x: 10, y: 75, direction: "S" },
+//       instructions: ["L", "F", "R", "R", "F", "F", "L", "F", "R", "F", "F"],
+//     },
+//   ],
+// };
 
 const loadDefaultInstructions = async (
-  setState: React.Dispatch<React.SetStateAction<Data>>
+  setState: React.Dispatch<React.SetStateAction<Data | null>>
 ) => {
   try {
     const res = await fetch(defaultInstructionsUrl);
@@ -43,9 +42,11 @@ const loadDefaultInstructions = async (
     const lineFour = textAsArrayOfLines[3];
     const lineFive = textAsArrayOfLines[4];
 
+    const [xAsString, yAsString] = splitInHalf(lineOne)
+
     const maxCoordinates = {
-      x: numberToBoardCoordinate(CoordinateSchema.parse(lineOne.charAt(0))),
-      y: numberToBoardCoordinate(CoordinateSchema.parse(lineOne.charAt(1))),
+      x: numberToBoardCoordinate(CoordinateSchema.parse(xAsString)),
+      y: numberToBoardCoordinate(CoordinateSchema.parse(yAsString)),
     };
     const mower1 = {
       start: {
@@ -78,8 +79,7 @@ const loadDefaultInstructions = async (
 };
 
 function App() {
-  const [data, setData] = useState<Data>(mockData);
-  console.log("data", data);
+  const [data, setData] = useState<Data | null>(null);
   return (
     <div className="max-w-7xl mx-auto">
       <Header />
@@ -88,11 +88,11 @@ function App() {
         <Button onClick={() => loadDefaultInstructions(setData)}>
           Lancer les instructions par défaut
         </Button>
-        <BoardWithCoordinates
+        {!!data && <BoardWithCoordinates
           key={JSON.stringify(data)}
           maxCoordinates={data.maxCoordinates}
           mowers={data.mowers}
-        />
+        />}
       </main>
       <Toaster richColors position="bottom-center" />
     </div>
