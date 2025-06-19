@@ -1,28 +1,14 @@
-import {
-  Stage,
-  Layer,
-  Image,
-  Text,
-  Rect,
-  Group,
-  type KonvaNodeComponent,
-} from "react-konva";
+import { Stage, Layer, Text, Rect } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
-import type {
-  BoardCoordinate,
-  CssCoordinate,
-  Direction,
-  Instruction,
-  Mower,
-} from "@/lib/types";
+import type { Mower } from "@/lib/types";
 import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
 import {
   getCssCoordinatesFromBoardCoordinates,
   getMowerAnimationSteps,
   numberToCssCoordinate,
 } from "@/lib/utils";
-import { useEffect, useRef, useState, type Ref } from "react";
+import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
 
 const DIRECTION_TO_ROTATION = {
@@ -33,70 +19,91 @@ const DIRECTION_TO_ROTATION = {
 };
 
 type MowerProps = {
+  mower: Mower;
   squareSize: number;
-  boardSize: number;
-  startCoordinates: {
-    x: BoardCoordinate;
-    y: BoardCoordinate;
-  };
-  direction: Direction;
-  instructions: Instruction[];
+  onAnimationComplete: () => void;
+  shouldAnimate: boolean;
 };
+
 const MowerUI = ({
-  boardSize,
+  mower,
   squareSize,
-  startCoordinates,
-  direction,
-  instructions,
+  onAnimationComplete,
+  shouldAnimate,
 }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
-  const imageRef = useRef<typeof ImageWithTypeSafety>(null);
+  const imageRef = useRef<Konva.Image>(null);
+
+  const { start, instructions } = mower;
 
   const width = squareSize * 0.6;
   const height = width * 1.5;
 
-  const coordinates = getCssCoordinatesFromBoardCoordinates({
-    x: startCoordinates.x,
-    y: startCoordinates.y,
+  const startCoords = getCssCoordinatesFromBoardCoordinates({
+    x: start.x,
+    y: start.y,
     squareSize,
   });
-  const xCoordinate = numberToCssCoordinate(coordinates.x + squareSize / 2);
-  const yCoordinate = numberToCssCoordinate(coordinates.y + squareSize / 2);
-  const steps = getMowerAnimationSteps({
-    instructions,
-    startDirection: direction,
-    startCoordinates,
-  });
 
+  const startX = numberToCssCoordinate(startCoords.x + squareSize / 2);
+  const startY = numberToCssCoordinate(startCoords.y + squareSize / 2);
 
+  useEffect(() => {
+    if (!mowerImage || !imageRef.current || !shouldAnimate) return;
 
-  useEffect(() => { 
-
-    if(imageRef.current === null) return;
-    
-    const tween = new Konva.Tween({
-      node: imageRef.current,
-      duration: 1,
-      x: window.innerWidth - 100,
-      easing: Konva.Easings.Linear,
+    const steps = getMowerAnimationSteps({
+      instructions,
+      startDirection: start.direction,
+      startCoordinates: { x: start.x, y: start.y },
     });
-    tween.play();
 
-  }, []);
+    const animate = async () => {
+      for (const step of steps) {
+        await new Promise<void>((resolve) => {
+          const targetCoords = getCssCoordinatesFromBoardCoordinates({
+            x: step.x,
+            y: step.y,
+            squareSize,
+          });
+
+          const tween = new Konva.Tween({
+            node: imageRef.current!,
+            duration: 0.5,
+            x: numberToCssCoordinate(targetCoords.x + squareSize / 2),
+            y: numberToCssCoordinate(targetCoords.y + squareSize / 2),
+            rotation: DIRECTION_TO_ROTATION[step.direction],
+            easing: Konva.Easings.Linear,
+            onFinish: resolve,
+          });
+          tween.play();
+        });
+      }
+      onAnimationComplete();
+    };
+
+    animate();
+  }, [
+    mowerImage,
+    instructions,
+    start,
+    squareSize,
+    onAnimationComplete,
+    shouldAnimate,
+  ]);
 
   if (!mowerImage) return null;
 
   return (
     <ImageWithTypeSafety
       ref={imageRef}
-      x={xCoordinate}
-      y={yCoordinate}
+      x={startX}
+      y={startY}
       image={mowerImage}
       width={width}
       height={height}
       offsetX={width / 2}
       offsetY={height / 2}
-      rotation={DIRECTION_TO_ROTATION[direction]}
+      rotation={DIRECTION_TO_ROTATION[start.direction]}
     />
   );
 };
@@ -117,7 +124,12 @@ export const BoardWithCoordinates = ({
     height: 1000,
   });
   const containerRef = useRef<HTMLDivElement>(null);
-  const boardRef = useRef<Layer>(null);
+  const layerRef = useRef<Konva.Layer>(null);
+  const [currentMowerIndex, setCurrentMowerIndex] = useState(0);
+
+  const handleAnimationComplete = () => {
+    setCurrentMowerIndex((prev) => prev + 1);
+  };
 
   const boardSize = Math.max(stageSize.width, stageSize.height);
   const potentialSquareSize = boardSize / maxCoordinates.x;
@@ -129,31 +141,25 @@ export const BoardWithCoordinates = ({
   const yMax = maxCoordinates.y;
 
   useEffect(() => {
-    if (!boardRef.current) return;
-    const boardSizeValues = boardRef.current.getClientRect();
-    setStageSize((prev) => ({
-      ...prev,
-      width: boardSizeValues.width,
-      height: boardSizeValues.height,
-    }));
+    if (containerRef.current) {
+      setStageSize({
+        width: containerRef.current.offsetWidth,
+        height: containerRef.current.offsetHeight,
+      });
+    }
   }, []);
-
-  // TODO:
-  // find a way to animate the mowers
-  // add the animation logics in Board
-  // make it promise based so we can await before starting the next animation
 
   return (
     <div
-      className="border-2 border-gray-300 rounded-lg overflow-x-scroll w-full"
+      className="border-2 border-gray-300 rounded-lg overflow-auto w-full h-[80vh]"
       ref={containerRef}
     >
       <Stage
-        width={stageSize.width + 50}
-        height={stageSize.height + 50}
+        width={stageSize.width}
+        height={stageSize.height}
         className="p-4"
       >
-        <Layer ref={boardRef}>
+        <Layer>
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
               <Rect
@@ -162,7 +168,7 @@ export const BoardWithCoordinates = ({
                 y={i * squareSize}
                 width={squareSize}
                 height={squareSize}
-                fill={(i + j) % 2 === 0 ? "white" : "black"}
+                fill={(i + j) % 2 === 0 ? "#f0f0f0" : "#d3d3d3"}
               />
             ))
           )}
@@ -172,10 +178,10 @@ export const BoardWithCoordinates = ({
           {[...Array(yMax)].map((_, i) => (
             <Text
               key={`yAxis-${i}`}
-              text={`${yMax - (i + 1)}`}
-              x={stageSize.width + 10}
+              text={`${yMax - 1 - i}`}
+              x={xMax * squareSize + 10}
               y={i * squareSize + squareSize / 2 - 10}
-              fontSize={20}
+              fontSize={12}
             />
           ))}
 
@@ -183,31 +189,26 @@ export const BoardWithCoordinates = ({
             <Text
               key={`xAxis-${j}`}
               text={`${j}`}
-              x={j * squareSize + squareSize / 2 - 10}
-              y={stageSize.height + 10}
-              fontSize={20}
+              x={j * squareSize + squareSize / 2 - 5}
+              y={yMax * squareSize + 10}
+              fontSize={12}
             />
           ))}
         </Layer>
 
-        <Layer>
-          {mowers.map((mower, index) => {
-            const x = mower.start.x;
-            const y = mower.start.y;
-            const direction = mower.start.direction;
-            const instructions = mower.instructions;
-
-            return (
-              <MowerUI
-                key={index}
-                squareSize={squareSize}
-                boardSize={boardSize}
-                startCoordinates={{ x, y }}
-                direction={direction}
-                instructions={instructions}
-              />
-            );
-          })}
+        <Layer ref={layerRef}>
+          {mowers.map(
+            (mower, index) =>
+              currentMowerIndex >= index && (
+                <MowerUI
+                  key={index}
+                  mower={mower}
+                  squareSize={squareSize}
+                  onAnimationComplete={handleAnimationComplete}
+                  shouldAnimate={currentMowerIndex === index}
+                />
+              )
+          )}
         </Layer>
       </Stage>
     </div>
