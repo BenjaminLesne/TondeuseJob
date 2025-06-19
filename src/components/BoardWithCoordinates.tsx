@@ -165,8 +165,7 @@ export const BoardWithCoordinates = ({
 
         setSquareSize(newSquareSize);
         setStageSize({
-          // width: containerWidth,
-          width: xMax * newSquareSize + xAxisLabelPadding,
+          width: xMax * newSquareSize + yAxisLabelPadding,
           height: yMax * newSquareSize + xAxisLabelPadding,
         });
       }
@@ -180,10 +179,10 @@ export const BoardWithCoordinates = ({
 
   return (
     <div
-      className="p-4 border-2 border-gray-300 rounded-lg flex justify-center overflow-x-scroll"
+      className="p-4 border-2 border-gray-300 rounded-lg flex justify-start overflow-x-auto"
       ref={containerRef}
     >
-      <Stage width={stageSize.width} height={stageSize.height}>
+      <Stage width={stageSize.width} height={stageSize.height} className="mx-auto">
         <Layer>
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
