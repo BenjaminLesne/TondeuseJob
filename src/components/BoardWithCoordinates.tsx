@@ -68,49 +68,21 @@ const MowerUI = ({
     startCoordinates,
   });
 
-  // ================================================
-  // steps.forEach((item, index) => {
-  //   setTimeout(() => {
-  //     console.log(item);
-  //   }, index * 2000);
-  // });
-  // ================================================
 
 
-  // TODO: animate each instruction step
-  // there is a syntax with an await somewhere, it could be nice to await each instruction
+  useEffect(() => { 
 
-  // useEffect(() => {
-
-  //   if(imageRef.current === null) return;
+    if(imageRef.current === null) return;
     
-  //   const tween = new Konva.Tween({
-  //     node: imageRef.current,
-  //     duration: 1,
-  //     x: window.innerWidth - 100,
-  //     easing: Konva.Easings.Linear,
-  //   });
-  //   tween.play();
+    const tween = new Konva.Tween({
+      node: imageRef.current,
+      duration: 1,
+      x: window.innerWidth - 100,
+      easing: Konva.Easings.Linear,
+    });
+    tween.play();
 
-
-  //   // const anim = new Konva.Animation(() => {
-  //   //   imageRef.current.x(
-  //   //     steps[0].x
-  //   //   );
-  //   //   imageRef.current.y(
-  //   //     steps[0].y
-  //   //   );
-  //   //   imageRef.current.rotation(
-  //   //     DIRECTION_TO_ROTATION[steps[0].direction]
-  //   //   );
-  //   // }, imageRef.current.getLayer());
-
-  //   // anim.start();
-
-  //   // return () => {
-  //   //   anim.stop();
-  //   // };
-  // }, []);
+  }, []);
 
   if (!mowerImage) return null;
 
@@ -167,7 +139,9 @@ export const BoardWithCoordinates = ({
   }, []);
 
   // TODO:
-  // position mowers to right board coordinates on start
+  // find a way to animate the mowers
+  // add the animation logics in Board
+  // make it promise based so we can await before starting the next animation
 
   return (
     <div
