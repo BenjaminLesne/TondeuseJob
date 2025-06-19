@@ -23,6 +23,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      konva:
+        specifier: ^9.3.20
+        version: 9.3.20
       lucide-react:
         specifier: ^0.515.0
         version: 0.515.0(react@19.1.0)

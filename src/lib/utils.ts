@@ -7,10 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 type GetBoardCssCoordinatesFromBoardCoordinatesArgs = {
-  x: number; // Board x coordinate
-  y: number; // Board y coordinate
-  squareSize: number; // Size of each square in pixels
-  boardSize: number; // Total size of the board in pixels
+  x: number; 
+  y: number; 
+  squareSize: number;
+  boardSize: number; 
 };
 export function getCssCoordinatesFromBoardCoordinates({
   boardSize,

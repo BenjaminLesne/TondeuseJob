@@ -6,6 +6,7 @@ import {
   Rect,
   Group,
   type KonvaNodeComponent,
+   
 } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import useImage from "use-image";
@@ -13,6 +14,7 @@ import type {
   BoardCoordinate,
   CssCoordinate,
   Direction,
+  Instruction,
   Mower,
 } from "@/lib/types";
 import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
@@ -21,6 +23,7 @@ import {
   numberToCssCoordinate,
 } from "@/lib/utils";
 import { useEffect, useRef, useState, type Ref } from "react";
+import Konva from 'konva';
 
 const DIRECTION_TO_ROTATION = {
   N: 180,
@@ -35,11 +38,20 @@ type MowerProps = {
   x: BoardCoordinate;
   y: BoardCoordinate;
   direction: Direction;
+  instructions: Instruction[];
 };
-const MowerUI = ({ boardSize, squareSize, x, y, direction }: MowerProps) => {
+const MowerUI = ({
+  boardSize,
+  squareSize,
+  x,
+  y,
+  direction,
+  instructions,
+}: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
+  const imageRef = useRef<typeof ImageWithTypeSafety>(null);
 
-  if (!mowerImage) return;
+ 
 
   const width = squareSize * 0.6;
   const height = width * 1.5;
@@ -53,8 +65,32 @@ const MowerUI = ({ boardSize, squareSize, x, y, direction }: MowerProps) => {
   const xCoordinate = numberToCssCoordinate(coordinates.x + squareSize / 2);
   const yCoordinate = numberToCssCoordinate(coordinates.y + squareSize / 2);
 
+  // TODO: animate each instruction step
+  // there is a syntax with an await somewhere, it could be nice to await each instruction
+  
+  // useEffect(() => {
+  //   const amplitude = 100;
+  //   const period = 2000; // in milliseconds
+
+  //   const anim = new Konva.Animation((frame) => {
+  //     imageRef.current.x(
+  //       amplitude * Math.sin((frame.time * 2 * Math.PI) / period) +
+  //       window.innerWidth / 2
+  //     );
+  //   }, imageRef.current.getLayer());
+
+  //   anim.start();
+
+  //   return () => {
+  //     anim.stop();
+  //   };
+  // }, []);
+
+  if (!mowerImage) return null;
+
   return (
     <ImageWithTypeSafety
+      ref={imageRef}
       x={xCoordinate}
       y={yCoordinate}
       image={mowerImage}
@@ -159,6 +195,7 @@ export const BoardWithCoordinates = ({
             const x = mower.start.x;
             const y = mower.start.y;
             const direction = mower.start.direction;
+            const instructions = mower.instructions;
 
             return (
               <MowerUI
@@ -168,6 +205,7 @@ export const BoardWithCoordinates = ({
                 x={x}
                 y={y}
                 direction={direction}
+                instructions={instructions}
               />
             );
           })}
