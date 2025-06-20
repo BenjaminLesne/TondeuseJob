@@ -91,6 +91,8 @@ function App() {
             Lancer les instructions par défaut
           </Button>
 
+          <p>ou</p>
+
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="picture">
               Charger les instructions depuis un fichier
