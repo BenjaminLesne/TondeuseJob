@@ -173,9 +173,10 @@ const MowerUI = ({
           />
           <Text
             text={`x: ${finalPosition.x}\ny: ${finalPosition.y}\nDirection: ${finalPosition.direction}`}
-            fontFamily="Calibri"
+            fontFamily="Roboto, sans-serif"
             fontSize={18}
             padding={5}
+            lineHeight={1.3}
             fill="black"
           />
         </Label>
@@ -254,7 +255,7 @@ export const BoardWithCoordinates = ({
   }, [xMax, yMax]);
 
   if (grassImage === null) {
-    return <div>Loading...</div>;
+    return <div>Chargement...</div>;
   }
 
   return (

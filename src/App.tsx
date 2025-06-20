@@ -20,7 +20,7 @@ const loadDefaultInstructions = async (
   try {
     const res = await fetch(defaultInstructionsUrl);
     if (!res.ok) throw new Error("Failed to load file");
-    const text = await res.text(); // optionally use the content
+    const text = await res.text();
     const textAsArrayOfLines = text.split("\n");
     const lineOne = textAsArrayOfLines[0];
     const lineTwo = textAsArrayOfLines[1];
@@ -74,6 +74,7 @@ function App() {
         <Button onClick={() => loadDefaultInstructions(setData)}>
           Lancer les instructions par défaut
         </Button>
+        <div className="py-5"></div>
         {!!data && <BoardWithCoordinates
           key={JSON.stringify(data)}
           maxCoordinates={data.maxCoordinates}
