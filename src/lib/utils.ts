@@ -123,3 +123,14 @@ export function splitInHalf(string: string): [string, string] {
   const mid = string.length / 2;
   return [string.slice(0, mid), string.slice(mid)];
 }
+
+export const getShortestRotation = (current: number, target: number) => {
+  const diff = target - current;
+  if (diff > 180) {
+    return current + (diff - 360);
+  }
+  if (diff < -180) {
+    return current + (diff + 360);
+  }
+  return current + diff;
+};

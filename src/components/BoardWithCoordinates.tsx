@@ -1,4 +1,4 @@
-import { Stage, Layer, Text, Rect, Label, Tag } from "react-konva";
+import { Stage, Layer, Text, Label, Tag } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
 import grassPictureUrl from "../assets/gass.png";
 import useImage from "use-image";
@@ -7,10 +7,10 @@ import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
 import {
   getCssCoordinatesFromBoardCoordinates,
   getMowerAnimationSteps,
+  getShortestRotation,
   numberToCssCoordinate,
 } from "@/lib/utils";
-import { useCallback } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Konva from "konva";
 
 const DIRECTION_TO_ROTATION = {
@@ -43,6 +43,7 @@ const MowerUI = ({
     direction: Direction;
   } | null>(null);
   const labelRef = useRef<Konva.Label>(null);
+  const rotationRef = useRef(DIRECTION_TO_ROTATION[mower.start.direction]);
 
   const { start, instructions } = mower;
 
@@ -79,12 +80,17 @@ const MowerUI = ({
             maxY: maxCoordinates.y,
           });
 
+          const newRotation = getShortestRotation(
+            rotationRef.current,
+            DIRECTION_TO_ROTATION[step.direction]
+          );
+          rotationRef.current = newRotation;
           const tween = new Konva.Tween({
             node: imageRef.current!,
             duration: 0.5,
             x: numberToCssCoordinate(targetCoords.x + squareSize / 2),
             y: numberToCssCoordinate(targetCoords.y + squareSize / 2),
-            rotation: DIRECTION_TO_ROTATION[step.direction],
+            rotation: newRotation,
             easing: Konva.Easings.Linear,
             onFinish: resolve,
           });
@@ -118,6 +124,8 @@ const MowerUI = ({
     squareSize,
     onAnimationComplete,
     shouldAnimate,
+    maxCoordinates,
+    height,
   ]);
 
   const finalCssCoordinates = finalPosition
@@ -245,7 +253,7 @@ export const BoardWithCoordinates = ({
     };
   }, [xMax, yMax]);
 
-  if(grassImage === null) {
+  if (grassImage === null) {
     return <div>Loading...</div>;
   }
 
@@ -263,12 +271,12 @@ export const BoardWithCoordinates = ({
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
               <ImageWithTypeSafety
-              key={`${i}-${j}`}
-              x={numberToCssCoordinate(j * squareSize)}
-              y={numberToCssCoordinate(i * squareSize)}
-              width={squareSize}
-              height={squareSize}
-              image={grassImage}
+                key={`${i}-${j}`}
+                x={numberToCssCoordinate(j * squareSize)}
+                y={numberToCssCoordinate(i * squareSize)}
+                width={squareSize}
+                height={squareSize}
+                image={grassImage}
               />
             ))
           )}
