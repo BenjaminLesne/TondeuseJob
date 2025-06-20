@@ -16,62 +16,19 @@ import {
 } from "./lib/schemas";
 import { numberToBoardCoordinate, splitInHalf } from "./lib/utils";
 
-const loadDefaultInstructions = async (
-  setState: React.Dispatch<React.SetStateAction<Data | null>>
+const loadInstructions = async (
+  setState: React.Dispatch<React.SetStateAction<Data | null>>,
+  file?: File
 ) => {
   try {
-    const res = await fetch(defaultInstructionsUrl);
-    if (!res.ok) throw new Error("Failed to load file");
-    const text = await res.text();
-    const textAsArrayOfLines = text.split("\n");
-    const lineOne = textAsArrayOfLines[0];
-    const lineTwo = textAsArrayOfLines[1];
-    const lineThree = textAsArrayOfLines[2];
-    const lineFour = textAsArrayOfLines[3];
-    const lineFive = textAsArrayOfLines[4];
-
-    const [xAsString, yAsString] = splitInHalf(lineOne)
-
-    const maxCoordinates = {
-      x: numberToBoardCoordinate(CoordinateSchema.parse(xAsString)),
-      y: numberToBoardCoordinate(CoordinateSchema.parse(yAsString)),
-    };
-    const mower1 = {
-      start: {
-        x: numberToBoardCoordinate(CoordinateSchema.parse(lineTwo.charAt(0))),
-        y: numberToBoardCoordinate(CoordinateSchema.parse(lineTwo.charAt(1))),
-        direction: DirectionSchema.parse(lineTwo.charAt(3)),
-      },
-      instructions: InstructionSchema.array().parse(lineThree.split("")),
-    };
-
-    const mower2 = {
-      start: {
-        x: numberToBoardCoordinate(CoordinateSchema.parse(lineFour.charAt(0))),
-        y: numberToBoardCoordinate(CoordinateSchema.parse(lineFour.charAt(1))),
-        direction: DirectionSchema.parse(lineFour.charAt(3)),
-      },
-      instructions: InstructionSchema.array().parse(lineFive.split("")),
-    };
-
-    const mowers = [mower1, mower2];
-
-    setState({
-      maxCoordinates,
-      mowers,
-    });
-  } catch (err) {
-    console.error(err);
-    toast.error("Une erreur est survenue", {});
-  }
-};
-
-const loadInstructionsFromFile = async (
-  file: File,
-  setState: React.Dispatch<React.SetStateAction<Data | null>>
-) => {
-  try {
-    const text = await file.text();
+    let text;
+    if (file) {
+      text = await file.text();
+    } else {
+      const res = await fetch(defaultInstructionsUrl);
+      if (!res.ok) throw new Error("Failed to load file");
+      text = await res.text();
+    }
     const textAsArrayOfLines = text.split("\n");
     const lineOne = textAsArrayOfLines[0];
     const lineTwo = textAsArrayOfLines[1];
@@ -130,10 +87,7 @@ function App() {
       <main className="px-3 py-8">
         <h1 className="text-4xl text-center">Vos tondeuses à gazon</h1>
         <div className="flex justify-center flex-col max-w-sm mx-auto items-center gap-y-4 py-4">
-          <Button
-            className="w-full"
-            onClick={() => loadDefaultInstructions(setData)}
-          >
+          <Button className="w-full" onClick={() => loadInstructions(setData)}>
             Lancer les instructions par défaut
           </Button>
 
@@ -152,7 +106,7 @@ function App() {
             <Button
               className="w-full"
               variant="secondary"
-              onClick={() => loadInstructionsFromFile(file, setData)}
+              onClick={() => loadInstructions(setData, file)}
             >
               Lancer les instructions depuis le fichier
             </Button>
