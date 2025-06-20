@@ -9,12 +9,13 @@ import {
   getMowerAnimationSteps,
   numberToCssCoordinate,
 } from "@/lib/utils";
+import { useCallback } from "react";
 import { useEffect, useRef, useState } from "react";
 import Konva from "konva";
 
 const DIRECTION_TO_ROTATION = {
   N: 180,
-  E: (-90),
+  E: -90,
   S: 0,
   W: 90,
 };
@@ -77,8 +78,6 @@ const MowerUI = ({
             squareSize,
             maxY: maxCoordinates.y,
           });
-
-          console.log(DIRECTION_TO_ROTATION[step.direction])
 
           const tween = new Konva.Tween({
             node: imageRef.current!,
@@ -201,9 +200,9 @@ export const BoardWithCoordinates = ({
   const layerRef = useRef<Konva.Layer>(null);
   const [currentMowerIndex, setCurrentMowerIndex] = useState(0);
 
-  const handleAnimationComplete = () => {
+  const handleAnimationComplete = useCallback(() => {
     setCurrentMowerIndex((prev) => prev + 1);
-  };
+  }, []);
 
   const xMax = maxCoordinates.x + 1;
   const yMax = maxCoordinates.y + 1;
