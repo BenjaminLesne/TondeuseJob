@@ -5,6 +5,7 @@ import useImage from "use-image";
 import type { BoardCoordinate, Direction, Mower } from "@/lib/types";
 import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
 import {
+  cn,
   getCssCoordinatesFromBoardCoordinates,
   getMowerAnimationSteps,
   getShortestRotation,
@@ -26,6 +27,7 @@ type MowerProps = {
   maxCoordinates: { x: BoardCoordinate; y: BoardCoordinate };
   onAnimationComplete: () => void;
   shouldAnimate: boolean;
+  delay: number;
 };
 
 const MowerUI = ({
@@ -34,6 +36,7 @@ const MowerUI = ({
   onAnimationComplete,
   shouldAnimate,
   maxCoordinates,
+  delay,
 }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
   const imageRef = useRef<Konva.Image>(null);
@@ -63,60 +66,63 @@ const MowerUI = ({
   useEffect(() => {
     if (!mowerImage || !imageRef.current || !shouldAnimate) return;
 
-    const steps = getMowerAnimationSteps({
-      instructions,
-      startDirection: start.direction,
-      startCoordinates: { x: start.x, y: start.y },
-      maxCoordinates,
-    });
+    const timeout = setTimeout(() => {
+      const steps = getMowerAnimationSteps({
+        instructions,
+        startDirection: start.direction,
+        startCoordinates: { x: start.x, y: start.y },
+        maxCoordinates,
+      });
 
-    const animate = async () => {
-      for (const step of steps) {
-        await new Promise<void>((resolve) => {
-          const targetCoords = getCssCoordinatesFromBoardCoordinates({
-            x: step.x,
-            y: step.y,
-            squareSize,
-            maxY: maxCoordinates.y,
-          });
+      const animate = async () => {
+        for (const step of steps) {
+          await new Promise<void>((resolve) => {
+            const targetCoords = getCssCoordinatesFromBoardCoordinates({
+              x: step.x,
+              y: step.y,
+              squareSize,
+              maxY: maxCoordinates.y,
+            });
 
-          const newRotation = getShortestRotation(
-            rotationRef.current,
-            DIRECTION_TO_ROTATION[step.direction]
-          );
-          rotationRef.current = newRotation;
-          const tween = new Konva.Tween({
-            node: imageRef.current!,
-            duration: 0.5,
-            x: numberToCssCoordinate(targetCoords.x + squareSize / 2),
-            y: numberToCssCoordinate(targetCoords.y + squareSize / 2),
-            rotation: newRotation,
-            easing: Konva.Easings.Linear,
-            onFinish: resolve,
-          });
-          if (labelRef.current) {
-            const labelTween = new Konva.Tween({
-              node: labelRef.current,
+            const newRotation = getShortestRotation(
+              rotationRef.current,
+              DIRECTION_TO_ROTATION[step.direction]
+            );
+            rotationRef.current = newRotation;
+            const tween = new Konva.Tween({
+              node: imageRef.current!,
               duration: 0.5,
               x: numberToCssCoordinate(targetCoords.x + squareSize / 2),
-              y: numberToCssCoordinate(
-                targetCoords.y + squareSize / 2 - height / 2 - 30
-              ),
+              y: numberToCssCoordinate(targetCoords.y + squareSize / 2),
+              rotation: newRotation,
               easing: Konva.Easings.Linear,
+              onFinish: resolve,
             });
-            labelTween.play();
-          }
-          tween.play();
-        });
-      }
-      const finalStep = steps[steps.length - 1];
-      if (finalStep) {
-        setFinalPosition(finalStep);
-      }
-      onAnimationComplete();
-    };
+            if (labelRef.current) {
+              const labelTween = new Konva.Tween({
+                node: labelRef.current,
+                duration: 0.5,
+                x: numberToCssCoordinate(targetCoords.x + squareSize / 2),
+                y: numberToCssCoordinate(
+                  targetCoords.y + squareSize / 2 - height / 2 - 30
+                ),
+                easing: Konva.Easings.Linear,
+              });
+              labelTween.play();
+            }
+            tween.play();
+          });
+        }
+        const finalStep = steps[steps.length - 1];
+        if (finalStep) {
+          setFinalPosition(finalStep);
+        }
+        onAnimationComplete();
+      };
 
-    animate();
+      animate();
+    }, delay);
+    return () => clearTimeout(timeout);
   }, [
     mowerImage,
     instructions,
@@ -126,6 +132,7 @@ const MowerUI = ({
     shouldAnimate,
     maxCoordinates,
     height,
+    delay,
   ]);
 
   const finalCssCoordinates = finalPosition
@@ -208,6 +215,15 @@ export const BoardWithCoordinates = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<Konva.Layer>(null);
   const [currentMowerIndex, setCurrentMowerIndex] = useState(0);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShouldAnimate(true);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   const handleAnimationComplete = useCallback(() => {
     setCurrentMowerIndex((prev) => prev + 1);
@@ -260,13 +276,16 @@ export const BoardWithCoordinates = ({
 
   return (
     <div
-      className="p-4 border-2 border-gray-300 rounded-lg flex justify-start overflow-x-auto"
+      className={cn(
+        "p-4 border-2 border-gray-300 rounded-lg flex justify-start overflow-x-auto",
+        shouldAnimate ? "fade-in" : "opacity-0"
+      )}
       ref={containerRef}
     >
       <Stage
+        className="mx-auto"
         width={stageSize.width}
         height={stageSize.height}
-        className="mx-auto"
       >
         <Layer x={PADDING} y={PADDING}>
           {[...Array(yMax)].map((_, i) =>
@@ -318,7 +337,8 @@ export const BoardWithCoordinates = ({
                     y: maxCoordinates.y,
                   }}
                   onAnimationComplete={handleAnimationComplete}
-                  shouldAnimate={currentMowerIndex === index}
+                  shouldAnimate={currentMowerIndex === index && shouldAnimate}
+                  delay={500}
                 />
               )
           )}
