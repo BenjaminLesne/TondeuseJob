@@ -1,5 +1,6 @@
 import { Stage, Layer, Text, Rect, Label, Tag } from "react-konva";
 import mowerPictureUrl from "../assets/mower.png";
+import grassPictureUrl from "../assets/gass.png";
 import useImage from "use-image";
 import type { BoardCoordinate, Direction, Mower } from "@/lib/types";
 import { ImageWithTypeSafety } from "./ImageWithTypeSafety";
@@ -13,7 +14,7 @@ import Konva from "konva";
 
 const DIRECTION_TO_ROTATION = {
   N: 180,
-  E: 270,
+  E: (-90),
   S: 0,
   W: 90,
 };
@@ -35,7 +36,11 @@ const MowerUI = ({
 }: MowerProps) => {
   const [mowerImage] = useImage(mowerPictureUrl);
   const imageRef = useRef<Konva.Image>(null);
-  const [finalPosition, setFinalPosition] = useState<{ x: BoardCoordinate; y: BoardCoordinate; direction: Direction } | null>(null);
+  const [finalPosition, setFinalPosition] = useState<{
+    x: BoardCoordinate;
+    y: BoardCoordinate;
+    direction: Direction;
+  } | null>(null);
   const labelRef = useRef<Konva.Label>(null);
 
   const { start, instructions } = mower;
@@ -73,6 +78,8 @@ const MowerUI = ({
             maxY: maxCoordinates.y,
           });
 
+          console.log(DIRECTION_TO_ROTATION[step.direction])
+
           const tween = new Konva.Tween({
             node: imageRef.current!,
             duration: 0.5,
@@ -87,7 +94,9 @@ const MowerUI = ({
               node: labelRef.current,
               duration: 0.5,
               x: numberToCssCoordinate(targetCoords.x + squareSize / 2),
-              y: numberToCssCoordinate(targetCoords.y + squareSize / 2 - height / 2 - 30),
+              y: numberToCssCoordinate(
+                targetCoords.y + squareSize / 2 - height / 2 - 30
+              ),
               easing: Konva.Easings.Linear,
             });
             labelTween.play();
@@ -112,6 +121,15 @@ const MowerUI = ({
     shouldAnimate,
   ]);
 
+  const finalCssCoordinates = finalPosition
+    ? getCssCoordinatesFromBoardCoordinates({
+        maxY: maxCoordinates.y,
+        squareSize,
+        x: finalPosition.x,
+        y: finalPosition.y,
+      })
+    : null;
+
   if (!mowerImage) return null;
 
   return (
@@ -128,31 +146,32 @@ const MowerUI = ({
         rotation={DIRECTION_TO_ROTATION[start.direction]}
       />
       {finalPosition && (
-    <Label
-      ref={labelRef}
-      x={finalPosition.x}
-      y={finalPosition.y}
-    >
-      <Tag
-        fill='white'
-        pointerDirection='down'
-        pointerWidth={10}
-        pointerHeight={10}
-        lineJoin='round'
-        shadowColor='black'
-        shadowBlur={10}
-        shadowOffset={{ x: 10, y: 10 }}
-        shadowOpacity={0.5}
-        cornerRadius={5}
-      />
-      <Text
-        text={`x: ${finalPosition.x}\ny: ${finalPosition.y}\nDirection:${finalPosition.direction}`}
-        fontFamily='Calibri'
-        fontSize={18}
-        padding={5}
-        fill='black'
-      />
-    </Label>
+        <Label
+          ref={labelRef}
+          x={finalCssCoordinates ? finalCssCoordinates.x + squareSize / 2 : 0}
+          y={finalCssCoordinates ? finalCssCoordinates.y + squareSize / 2 : 0}
+        >
+          <Tag
+            fill="white"
+            pointerDirection="down"
+            pointerWidth={10}
+            pointerHeight={10}
+            lineJoin="round"
+            shadowColor="black"
+            shadowBlur={10}
+            shadowOffset={{ x: 10, y: 10 }}
+            shadowOpacity={0.5}
+            cornerRadius={5}
+            stroke="black"
+          />
+          <Text
+            text={`x: ${finalPosition.x}\ny: ${finalPosition.y}\nDirection: ${finalPosition.direction}`}
+            fontFamily="Calibri"
+            fontSize={18}
+            padding={5}
+            fill="black"
+          />
+        </Label>
       )}
     </>
   );
@@ -172,6 +191,7 @@ export const BoardWithCoordinates = ({
   maxCoordinates,
   mowers = [],
 }: BoardWithCoordinatesProps) => {
+  const [grassImage] = useImage(grassPictureUrl);
   const [stageSize, setStageSize] = useState({
     width: 0,
     height: 0,
@@ -204,7 +224,8 @@ export const BoardWithCoordinates = ({
         const yAxisLabelPadding = 40;
         const xAxisLabelPadding = 30;
 
-        const availableWidthForGrid = containerWidth - yAxisLabelPadding - PADDING * 2;
+        const availableWidthForGrid =
+          containerWidth - yAxisLabelPadding - PADDING * 2;
         if (availableWidthForGrid <= 0) return;
 
         let newSquareSize = availableWidthForGrid / xMax;
@@ -212,10 +233,10 @@ export const BoardWithCoordinates = ({
         newSquareSize = Math.min(SQUARE_SIZE_MAX, newSquareSize);
 
         setSquareSize(newSquareSize);
-      setStageSize({
-       width: xMax * newSquareSize + yAxisLabelPadding + PADDING * 2,
-       height: yMax * newSquareSize + xAxisLabelPadding + PADDING * 2,
-      });
+        setStageSize({
+          width: xMax * newSquareSize + yAxisLabelPadding + PADDING * 2,
+          height: yMax * newSquareSize + xAxisLabelPadding + PADDING * 2,
+        });
       }
     });
 
@@ -225,22 +246,30 @@ export const BoardWithCoordinates = ({
     };
   }, [xMax, yMax]);
 
+  if(grassImage === null) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div
       className="p-4 border-2 border-gray-300 rounded-lg flex justify-start overflow-x-auto"
       ref={containerRef}
     >
-      <Stage width={stageSize.width} height={stageSize.height} className="mx-auto">
+      <Stage
+        width={stageSize.width}
+        height={stageSize.height}
+        className="mx-auto"
+      >
         <Layer x={PADDING} y={PADDING}>
           {[...Array(yMax)].map((_, i) =>
             [...Array(xMax)].map((_, j) => (
-              <Rect
-                key={`${i}-${j}`}
-                x={j * squareSize}
-                y={i * squareSize}
-                width={squareSize}
-                height={squareSize}
-                fill={(i + j) % 2 === 0 ? "#f0f0f0" : "#d3d3d3"}
+              <ImageWithTypeSafety
+              key={`${i}-${j}`}
+              x={numberToCssCoordinate(j * squareSize)}
+              y={numberToCssCoordinate(i * squareSize)}
+              width={squareSize}
+              height={squareSize}
+              image={grassImage}
               />
             ))
           )}
