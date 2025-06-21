@@ -220,17 +220,8 @@ export const BoardWithCoordinates = ({
   });
   const [squareSize, setSquareSize] = useState(SQUARE_SIZE_MIN);
   const [currentMowerIndex, setCurrentMowerIndex] = useState(0);
-  const [shouldAnimate, setShouldAnimate] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<Konva.Layer>(null);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShouldAnimate(true);
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, []);
 
   const handleAnimationComplete = useCallback(() => {
     setCurrentMowerIndex((prev) => prev + 1);
@@ -277,24 +268,24 @@ export const BoardWithCoordinates = ({
     };
   }, [xMax, yMax]);
 
-  useEffect(() => {
-    if (containerRef.current) {
-      const { scrollWidth, clientWidth } = containerRef.current;
-      if (scrollWidth > clientWidth) {
-        containerRef.current.scrollLeft = (scrollWidth - clientWidth) / 2 - 10;
-      }
+  if (containerRef.current) {
+    const { scrollWidth, clientWidth } = containerRef.current;
+    if (scrollWidth > clientWidth) {
+      containerRef.current.scrollLeft = (scrollWidth - clientWidth) / 2 - 10;
     }
-  }, [stageSize, shouldAnimate]);
+  }
 
   if (grassImage === null) {
     return <div>Chargement...</div>;
   }
 
+  const areDimensionsReady = stageSize.width > 0;
+
   return (
     <div
       className={cn(
         "p-4 border-2 border-gray-300 rounded-lg flex justify-start overflow-x-auto",
-        shouldAnimate ? "fade-in" : "opacity-0"
+        areDimensionsReady ? "fade-in" : "opacity-0"
       )}
       ref={containerRef}
     >
@@ -353,7 +344,7 @@ export const BoardWithCoordinates = ({
                     y: maxCoordinates.y,
                   }}
                   onAnimationComplete={handleAnimationComplete}
-                  shouldAnimate={currentMowerIndex === index && shouldAnimate}
+                  shouldAnimate={currentMowerIndex === index}
                   delay={500}
                 />
               )
