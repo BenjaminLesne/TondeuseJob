@@ -53,6 +53,13 @@ const MowerUI = ({
   const width = squareSize * 0.6;
   const height = width * 1.5;
 
+  const MIN_FONT_SIZE = 14;
+  const MAX_FONT_SIZE = 18;
+  const percentage =
+    (squareSize - SQUARE_SIZE_MIN) / (SQUARE_SIZE_MAX - SQUARE_SIZE_MIN);
+  const fontSize =
+    MIN_FONT_SIZE + percentage * (MAX_FONT_SIZE - MIN_FONT_SIZE);
+
   const startCoords = getCssCoordinatesFromBoardCoordinates({
     x: start.x,
     y: start.y,
@@ -181,7 +188,7 @@ const MowerUI = ({
           <Text
             text={`x: ${finalPosition.x}\ny: ${finalPosition.y}\nDirection: ${finalPosition.direction}`}
             fontFamily="Roboto, sans-serif"
-            fontSize={18}
+            fontSize={fontSize}
             padding={5}
             lineHeight={1.3}
             fill="black"
