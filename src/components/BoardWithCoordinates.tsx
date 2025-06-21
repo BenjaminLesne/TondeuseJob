@@ -219,10 +219,10 @@ export const BoardWithCoordinates = ({
     height: 0,
   });
   const [squareSize, setSquareSize] = useState(SQUARE_SIZE_MIN);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const layerRef = useRef<Konva.Layer>(null);
   const [currentMowerIndex, setCurrentMowerIndex] = useState(0);
   const [shouldAnimate, setShouldAnimate] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<Konva.Layer>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -276,6 +276,15 @@ export const BoardWithCoordinates = ({
       observer.disconnect();
     };
   }, [xMax, yMax]);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const { scrollWidth, clientWidth } = containerRef.current;
+      if (scrollWidth > clientWidth) {
+        containerRef.current.scrollLeft = (scrollWidth - clientWidth) / 2 - 10;
+      }
+    }
+  }, [stageSize, shouldAnimate]);
 
   if (grassImage === null) {
     return <div>Chargement...</div>;
